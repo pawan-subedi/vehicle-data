@@ -7,3 +7,9 @@ It is loaded into Cache so further load will be faster.
 Usage
 
 Clone the directory and run docker-compose up. Head out to localhost:8080.
+
+Project Uses
+
+nginx
+php-fm
+Redis
