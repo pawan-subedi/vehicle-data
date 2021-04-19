@@ -9,8 +9,6 @@ RUN apk add --update --no-cache --virtual .ext-deps \
 RUN \
     apk add --no-cache --virtual openssl-dev pcre-dev
 RUN \
-    pecl install redis && \
+    pecl install redis xdebug && \
     pecl clear-cache && \
-    pecl install memcached && \
-    docker-php-ext-enable redis &&\
-    docker-enable-ext php-memcached
+    docker-php-ext-enable redis xdebug

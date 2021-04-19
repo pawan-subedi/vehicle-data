@@ -40,6 +40,10 @@ class RedisAdapter implements CacheInterface
         return $this->adapter->has($key);
     }
 
+    public function flushAll(){
+        $this->adapter->flushAll();
+    }
+
     public function init()
     {
         if (!$this->initialized) {

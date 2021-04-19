@@ -1,12 +1,11 @@
 <?php
-
 ini_set('max_execution_time', 0); //There is a lot of fetching to be done. Lets not kill the script
 
-require_once(dirname(__FILE__) .'/response/series.php');
-require_once(dirname(__FILE__) .'/response/response.php');
-require_once(dirname(__FILE__) .'/cache/RedisAdapter.php');
-require_once(dirname(__FILE__) .'/classes/Make.php');
-require_once(dirname(__FILE__) .'/classes/Manufacturer.php');
+require_once(dirname(__FILE__) . '/response/series.php');
+require_once(dirname(__FILE__) . '/response/response.php');
+require_once(dirname(__FILE__) . '/cache/RedisAdapter.php');
+require_once(dirname(__FILE__) . '/classes/Make.php');
+require_once(dirname(__FILE__) . '/classes/Manufacturer.php');
 $startYear = '1950';
 $endYear = '2000';
 
@@ -30,24 +29,25 @@ $graphSeries = new Response();
 $cache = new RedisAdapter();
 $averageCounter = array();
 $cacheKey = "ALL_MANUFACTURERS";
+//$cache->flushAll();
 if ($cache->get($cacheKey)) {
-    $manufacturers = $cache->get($cacheKey);
+    $response = $cache->get($cacheKey);
+    $response = json_decode($response, true);
 } else {
     //Get All Manufacturers
     curl_setopt($curl, CURLOPT_URL, $allManufacturers);
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
     $response = curl_exec($curl);
     if ($response) {
+        $cache->set($cacheKey, $response);
         $response = json_decode($response, true);
     } else {
         die('Cannot connect to API');
     }
-
-    $manufacturers = array();
-    foreach ($response['Results'] as $manufacturer) {
-        $manufacturers[$manufacturer['Mfr_ID']] = Manufacturer::Decode($manufacturer);
-    }
-    $cache->set($cacheKey, $manufacturers);
+}
+$manufacturers = array();
+foreach ($response['Results'] as $manufacturer) {
+    $manufacturers[$manufacturer['Mfr_ID']] = Manufacturer::Decode($manufacturer);
 }
 
 
@@ -68,9 +68,9 @@ while ($currentYear++ < $endYear) {
             curl_setopt($curl, CURLOPT_URL, sprintf($getMakesByManufacturerYear, $details->getMfrID(), $currentYear));
             curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
             $response = curl_exec($curl);
-            $response = json_decode($response, true);
             $cache->set($cacheKey, $response);
         }
+        $response = json_decode($response, true);
         $count = 0;
 
         foreach ($response['Results'] as $make) {
@@ -81,9 +81,10 @@ while ($currentYear++ < $endYear) {
                 curl_setopt($curl, CURLOPT_URL, sprintf($getModelsByMakesYear, $make['MakeId'], $currentYear));
                 curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
                 $responseDetail = curl_exec($curl);
-                $responseDetail = json_decode($responseDetail, true);
                 $cache->set($cacheKey, $responseDetail);
             }
+
+            $responseDetail = json_decode($responseDetail, true);
 
             if ($responseDetail) {
                 $count += $responseDetail['Count'];

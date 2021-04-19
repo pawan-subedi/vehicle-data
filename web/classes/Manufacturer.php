@@ -1,6 +1,6 @@
 <?php
 include_once(dirname(__FILE__) .'/../tools/JsonDecode.php');
-class Manufacturer extends JsonDecode
+class Manufacturer extends JsonDecode implements JsonSerializable
 {
     /** @var string */
     protected $Country;
@@ -104,5 +104,14 @@ class Manufacturer extends JsonDecode
     }
 
 
-
+    public function jsonSerialize()
+    {
+        $json = [];
+        $reflect = new ReflectionClass($this);
+        $properties = $reflect->getProperties(ReflectionProperty::IS_PROTECTED);
+        foreach ($properties as $property) {
+            $json[$property->getName()] = $this->{$property->getName()};
+        }
+        return $json;
+    }
 }
